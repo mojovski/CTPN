@@ -31,7 +31,11 @@ Python2.7, cython and all what Caffe depends on.
 
 3. After Caffe is set up, you need to download a trained model (about 78M) from [Google Drive](https://drive.google.com/open?id=0B7c5Ix-XO7hqQWtKQ0lxTko4ZGs) or [our website](http://textdet.com/downloads/ctpn_trained_model.caffemodel), and then populate it into directory `models`. The model's name should be ` ctpn_trained_model.caffemodel`.
 
-4. Now, be sure you are in the root directory of the codes. Run `make` to compile some cython files.
+4. Now, be sure you are in the root directory of the codes. Run ```make``` in the CTPN root dir to compile some cython files.
+Note, that you might need to install cython with```
+pip install cython```
+or```
+sudo apt-get install cython``` (only if Ubuntu <14, where cython >0.21 is available).
 
 5. Run `python tools/demo.py` for a demo. Or `python tools/demo.py --no-gpu` to run it under CPU mode.
 
