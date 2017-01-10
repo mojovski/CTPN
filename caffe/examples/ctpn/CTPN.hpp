@@ -72,6 +72,28 @@ public:
 		//run the forward stuff
 		_net->ForwardPrefilled();
 
+		//http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1Net.html
+		Blob<float>* rois=_net.blob_by_name("rois");
+		Blob<float>* scores=_net.blob_by_name("scores");
+
+		std::vector<int> shape_rois=rois->shape();
+		std::vector<int> shape_scores=scores->shape();
+		//print shapes
+		std::cout << "shape_rois: ["
+		for (int i=0; i<shape_rois.size(); i++)
+		{
+			std::cout << shape_rois[i] << ", ";
+		}
+		std::cout << "]\n";
+		
+		std::cout << "shape_scores: ["
+		for (int i=0; i<shape_scores.size(); i++)
+		{
+			std::cout << shape_scores[i] << ", ";
+		}
+		std::cout << "]\n";
+
+
 		/* Copy the output layer to a std::vector */
 		/*Blob<float>* output_layer = _net->output_blobs()[0]; //how many blobs are there???
 		const float* begin = output_layer->cpu_data();

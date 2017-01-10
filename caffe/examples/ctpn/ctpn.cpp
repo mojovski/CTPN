@@ -2,6 +2,7 @@
 in c++
 
 1. subtract the mean, convert to float image
+(check)
 
 2. reshape and caffe.model.forward2 
 in other.py, class CaffeModel:
@@ -11,10 +12,12 @@ for k, v in input_data.items():
             self.net.blobs[k].data[...]=v
         return self.net.forward()
 ```
+(check)
 
 2.5 AAHH: The prototxt file defines a python layer.
 It uses the class ProposalLayer implemented in
 src/layers/text_proposals_layer.py
+(semi check: The target system will have to have python installed)
 
 
 3. read rois and scores: 
@@ -22,6 +25,7 @@ src/layers/text_proposals_layer.py
 rois=self.caffe_model.blob("rois")
 scores=self.caffe_model.blob("scores")
 ```
+(check)
 
 4. takes text proposals having configence >thredhold
 ```
