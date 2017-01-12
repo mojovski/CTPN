@@ -39,5 +39,17 @@ sudo apt-get install cython``` (only if Ubuntu <14, where cython >0.21 is availa
 
 5. Run `python tools/demo.py` for a demo. Or `python tools/demo.py --no-gpu` to run it under CPU mode.
 
+
+# Cpp Example of CTPN
+
+* make sure, that the layers directory and caffee are inside pythonpath:
+```
+export PYTHONPATH=$PYTHONBATH:`pwd`:/home/eugen/Projects/DeepLearning/CTPN/caffe/python
+```
+
+Now, you can call the CTPN/caffe/examples/ctpn/ctpn
+module, whith the requested arguments.
+
+
 # License
 The codes are released under the MIT License.

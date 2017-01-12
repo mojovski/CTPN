@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
   string img_file    = argv[3];
   cv::Vec3f mean(0,0,0);
   CTPN ctpn(model_file, trained_file, mean);
-
+  ctpn.options.score_threshold=0.01;
 
   std::cout << "---------- Text detection for "
             << img_file << " ----------" << std::endl;
@@ -117,5 +117,10 @@ int main(int argc, char** argv) {
   cv::Mat img = cv::imread(img_file, -1);
   CHECK(!img.empty()) << "Unable to decode image " << img_file;
   ctpn.process(img);
+
+  cv::Mat img_out=img.clone();
+
+  ctpn.drawResults(img_out);
+  cv::imwrite("out.jpg", img_out);
 
 }
