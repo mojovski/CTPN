@@ -76,7 +76,6 @@ public:
 		float* im_info_data=input_layer_im_info->mutable_cpu_data();
 		*(im_info_data)=(float)_input_geometry.height;
 		*(im_info_data+1)=(float)_input_geometry.width;
-		*(im_info_data+2)=(float)_input_geometry.width;
 
 		/* Forward dimension change to all layers. */
 		_net->Reshape();
@@ -125,10 +124,10 @@ public:
 		const Blob< float >* rois=_net->output_blobs()[0];
 		const Blob< float >* scores=_net->output_blobs()[1];
 
-		for (int si=0; si<rois->shape()[0]*rois->shape()[1]; si++)
-		{
-			std::cout << " x: " << *(rois->cpu_data()+si);
-		}
+		//for (int si=0; si<rois->shape()[0]*rois->shape()[1]; si++)
+		//{
+		//	std::cout << " x: " << *(rois->cpu_data()+si);
+		//}
 
 		std::vector<int> shape_rois=rois->shape();
 		std::vector<int> shape_scores=scores->shape();
@@ -147,12 +146,17 @@ public:
 		}
 		std::cout << "]\n";
 
-		std::vector<int> indices_to_keep=applyNMS(rois, scores, options.nms_threshold);
-		std::cout << "Indices to keep: " << indices_to_keep.size() << std::endl;
-		for (auto i: indices_to_keep)
-  			std::cout << i << ' ';
 
-		convertBlobToRectAndScores(rois, scores, indices_to_keep);
+		convertBlobToRectAndScores(rois, scores);
+
+		std::vector<int> indices_to_keep=applyNMS(options.nms_threshold);
+		std::cout << "Indices to keep: " << indices_to_keep.size() << std::endl;
+
+		filterRects(indices_to_keep);
+		//for (auto i: indices_to_keep)
+  		//	std::cout << i << ' ';
+
+		
 
 		std::cout << "CTPN processing done!\n";
 
@@ -171,13 +175,28 @@ public:
 
 	}
 
+	void filterRects(std::vector<int>& indices_to_keep)
+	{
+		std::vector<cv::Rect> _text_proposals;
+		std::vector<float> _scores;
+
+		for (int i=0; i<indices_to_keep.size(); i++)
+		{
+			_text_proposals.push_back(this->text_proposals[indices_to_keep[i]]);
+			_scores.push_back(this->scores[indices_to_keep[i]]);
+		}
+		this->scores=_scores;
+		this->text_proposals=_text_proposals;
+
+	}
+
 	void drawResults(cv::Mat& img)
 	{
 		std::cout << "Drawing results into image\n";
 		cv::Scalar color( 0, 255, 255 );
 		for(std::vector<cv::Rect>::iterator it=text_proposals.begin(); it!=text_proposals.end(); it++)
 		{
-			std::cout << "rect: " << (*it) << std::endl;
+			//std::cout << "rect: " << (*it) << std::endl;
 			cv::rectangle(img, *it, color);
 		}
 	}
@@ -185,19 +204,21 @@ public:
 	/*void convertBlobToRectAndScores(boost::shared_ptr< Blob< float > >& rois_blob, boost::shared_ptr< Blob< float > >& scores_blob,
 		std::vector<int>& idx_to_keep)
 	{*/
-	void convertBlobToRectAndScores(const Blob< float >* rois_blob, const Blob< float >* scores_blob,
-		std::vector<int>& idx_to_keep)
+	void convertBlobToRectAndScores(const Blob< float >* rois_blob, const Blob< float >* scores_blob)
 	{
-		for (int i=0; i<idx_to_keep.size(); i++)
+		for (int i=0; i<rois_blob->shape()[0]; i++)
 		{
-			cv::Rect r(rois_blob->data_at(idx_to_keep[i],0,0,0), //x
-				rois_blob->data_at(idx_to_keep[i], 1,0,0), //y
-				rois_blob->data_at(idx_to_keep[i], 2,0,0)-rois_blob->data_at(idx_to_keep[i], 0,0,0), //width
-				rois_blob->data_at(idx_to_keep[i], 3,0,0)-rois_blob->data_at(idx_to_keep[i], 1,0,0) //height
+			cv::Rect r(rois_blob->data_at(i,0,0,0), //x
+				rois_blob->data_at(i, 1,0,0), //y
+				rois_blob->data_at(i, 2,0,0)-rois_blob->data_at(i, 0,0,0), //width
+				rois_blob->data_at(i, 3,0,0)-rois_blob->data_at(i, 1,0,0) //height
 				);
-			std::cout << "rect: " << (r) << std::endl;
+			float score=scores_blob->data_at(i, 0,0,0);
+			if (score<options.score_threshold)
+				continue;
+			//std::cout << "rect: " << (r) << std::endl;
 			this->text_proposals.push_back(r);
-			this->scores.push_back(scores_blob->data_at(idx_to_keep[i], 0,0,0));
+			this->scores.push_back(score);
 		}
 
 	}
@@ -226,51 +247,12 @@ public:
 		float min_score_threshold)
 	{
 	*/
-	std::vector<int> applyNMS(const Blob< float >* rois_blob, const Blob< float >* scores_blob, 
-		float min_score_threshold)
+	std::vector<int> applyNMS(float min_threshold)
 	{
-		std::vector<float> x1_list, x2_list, y1_list, y2_list, scores_list, areas_list;
-		int n=rois_blob->shape()[0];
-		std::cout << "NMS for n=" << n << " initial regions. "
-		<<" Channels: " << rois_blob->channels() 
-		<<" "
-		<<"\n";
-		const float* begin_rois = rois_blob->cpu_data();
-  		const float* end_rois = begin_rois + rois_blob->shape()[0]*rois_blob->shape()[1];
-  		std::vector<float> rois_vec(begin_rois, end_rois);
+		
+		int ndets=scores.size();
 
-  		const float* begin_scores = scores_blob->cpu_data();
-  		const float* end_scores = begin_scores + scores_blob->shape()[0]*scores_blob->shape()[1];
-  		std::vector<float> scores_vec(begin_scores, end_scores);
-
-		for (int i=0; i<n; i++)
-		{
-
-			float x1=rois_vec[i*4+0];//rois_blob->data_at(i,0,0,0);
-
-			float y1=rois_vec[i*4+1];//rois_blob->data_at(i,1,0,0);
-			float x2=rois_vec[i*4+2];//rois_blob->data_at(i,2,0,0);
-			float y2=rois_vec[i*4+3];//rois_blob->data_at(i,3,0,0);
-			float score=scores_vec[i]; //scores_blob->data_at(i,0,0,0);
-			if (i<10)
-			{
-				std::cout << "score: " << score << std::endl;
-				std::cout << "(" << x1 << ", " << x2 << ", " << y1 << ", " << y2 << ")\n";
-			}
-			//if (score<min_score_threshold)
-			//	continue;
-			float area=(x2-x2+1)*(y2-y1+1);
-			x1_list.push_back(x1);
-			y1_list.push_back(y1);
-			x2_list.push_back(x2);
-			y2_list.push_back(y2);
-			scores_list.push_back(score);
-			areas_list.push_back(area);
-		}
-		std::cout << "x,y and score lists reading done!\n";
-		int ndets=scores_list.size();
-
-		std::vector<size_t> order=sort_indexes<float>(scores_list);
+		std::vector<size_t> order=sort_indexes<float>(scores);
 		std::cout << "argsort done! order.size: " << order.size() << "\n";
 		//a vector to keep track of suppressed elements
 		std::vector<int> suppressed(ndets,0);
@@ -293,29 +275,30 @@ public:
 	        if (suppressed[i] == 1)
 	            continue;
 	        keep.push_back(i);
-	        ix1 = x1_list[i];
-	        iy1 = y1_list[i];
-	        ix2 = x2_list[i];
-	        iy2 = y2_list[i];
-	        iarea = areas_list[i];
+	        std::cout << "keep added: " << i << "\t";
+	        ix1 = text_proposals[i].x;
+	        iy1 = text_proposals[i].y;
+	        ix2 = text_proposals[i].x+text_proposals[i].width;
+	        iy2 = text_proposals[i].y+text_proposals[i].height;
+	        iarea = text_proposals[i].width*text_proposals[i].height;
 	        for (_j=(_i+1); _j<ndets;_j++)
 	        {
 	            j = order[_j];
 	            if (suppressed[j] == 1)
 	                continue;
-	            xx1 = std::max(ix1, x1_list[j]);
-	            yy1 = std::max(iy1, y1_list[j]);
-	            xx2 = std::min(ix2, x2_list[j]);
-	            yy2 = std::min(iy2, y2_list[j]);
+	            xx1 = std::max(ix1, (float)text_proposals[j].x);
+	            yy1 = std::max(iy1, (float)text_proposals[j].y);
+	            xx2 = std::min(ix2, (float)(text_proposals[j].x+text_proposals[j].width));
+	            yy2 = std::min(iy2, (float)(text_proposals[j].y+text_proposals[j].height));
 	            w = std::max(0.0f, xx2 - xx1 + 1);
 	            h = std::max(0.0f, yy2 - yy1 + 1);
 	            inter = w * h;
-	            ovr = inter / (iarea + areas_list[j] - inter);
-	            if (ovr >= min_score_threshold)
+	            ovr = inter / (iarea + text_proposals[j].width*text_proposals[j].height - inter);
+	            if (ovr >= min_threshold)
 	                suppressed[j] = 1;
 	        }
 	    }
-	    std::cout << "Return keeped indices!\n";
+	    std::cout << "Return kept indices!\n";
 	    return keep;
 	}
 
@@ -356,6 +339,8 @@ public:
 			sample_resized = normalized_img;
 		return sample_resized;
 	}
+
+	cv::Size getImgGeometry(){return _input_geometry;}
 
 protected:
 	cv::Vec3f _mean;

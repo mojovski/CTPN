@@ -24,6 +24,7 @@ class ProposalLayer(caffe.Layer):
 
         bbox_deltas = bottom[1].data
         im_info = bottom[2].data[0, :]
+        print "text_proposals_layer: im_info.shape: "+str(im_info.shape)
         height, width = scores.shape[-2:]
 
         anchors=self.anchor_generator.locate_anchors((height, width), self._feat_stride)

@@ -7,7 +7,10 @@ def prepare_img(im, mean):
     """
         transform img into caffe's input img.
     """
+    print "prepare_img: shape before process: "+str(im.shape)
     im_data=np.transpose(im-mean, (2, 0, 1))
+    print "prepare_img: shape after process: "+str(im_data.shape)
+    print "img[0,100,100]: " + str(im_data[0,100,100])
     return im_data
 
 
@@ -88,7 +91,10 @@ class CaffeModel:
         return self.forward2({"data": input_data[np.newaxis, :]})
 
     def forward2(self, input_data):
+        print "forward2: input.data['data'].shape: "+str(input_data['data'].shape)
         for k, v in input_data.items():
+            print "key: "+str(k)+", v: "+str(*v)
+            print "v.shape: "+str(v.shape)
             self.net.blobs[k].reshape(*v.shape)
             self.net.blobs[k].data[...]=v
         return self.net.forward()
