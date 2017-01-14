@@ -9,11 +9,12 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-
+#include <algorithm>
 #include "boost/python.hpp"
 namespace bp = boost::python;
 
 #include "Utils.hpp"
+#include "Connector.hpp"
 
 using namespace caffe;  // NOLINT(build/namespaces)
 
@@ -157,7 +158,12 @@ public:
 
 		
 
-		std::cout << "CTPN processing done!\n";
+		std::cout << "Forward DNN processing done!\n";
+
+		Connector connector;
+		scores=normalize_scores();
+		connector.build_graph(this->text_proposals, this->scores, this->_input_geometry);
+
 
 		//next apply NMS
 
@@ -171,6 +177,21 @@ public:
 		const float* end = begin + output_layer->channels();
 		return std::vector<float>(begin, end);
 		*/
+
+	}
+
+	void normalize_scores()
+	{
+	    std::vector<float> n_scores;
+	    float min_score=*min_element(scores.begin(), scores.end());
+	    float max_score=*max_element(scores.begin(), scores.end());
+	    
+	    for (std::vector<float>::iterator it=scores.begin(); it!=scores.end(); it++)
+	    {
+	    	float n_score=((*it)-min_score)/(max_score-min_score);
+	    	n_scores.push_back(n_score);
+	    }
+	    scores=n_scores;
 
 	}
 

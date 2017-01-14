@@ -37,6 +37,7 @@ class TextDetector:
         :return: the bounding boxes of the detected texts
         """
         text_proposals, scores=self.text_proposal_detector.detect(im, cfg.MEAN)
+        print "im.shape: "+str(im.shape)
         print "Found scores of shape: "+str(scores.shape)
         print "Text proposals returned by net: "
         print str(text_proposals)

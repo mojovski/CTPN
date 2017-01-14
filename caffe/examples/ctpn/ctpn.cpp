@@ -115,7 +115,6 @@ int main(int argc, char** argv) {
             << img_file << " ----------" << std::endl;
 
   cv::Mat img = cv::imread(img_file, CV_LOAD_IMAGE_COLOR);
-  std::cout << "Loaded image. (10,10): " << img.at<cv::Vec3b>(100,100) << std::endl;
   //debug
   //namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
   //cv::imshow("Display window", img);

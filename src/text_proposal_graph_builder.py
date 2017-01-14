@@ -54,6 +54,7 @@ class TextProposalGraphBuilder:
                size_similarity(index1, index2)>=cfg.MIN_SIZE_SIM
 
     def build_graph(self, text_proposals, scores, im_size):
+        #im size: (height, width)
         self.text_proposals=text_proposals
         self.scores=scores
         self.im_size=im_size
@@ -63,6 +64,7 @@ class TextProposalGraphBuilder:
         for index, box in enumerate(text_proposals):
             boxes_table[int(box[0])].append(index)
         self.boxes_table=boxes_table
+        print "Boxes_table: "+str(boxes_table)
 
         graph=np.zeros((text_proposals.shape[0], text_proposals.shape[0]), np.bool)
 
