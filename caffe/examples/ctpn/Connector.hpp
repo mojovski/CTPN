@@ -59,6 +59,13 @@ public:
 			if (successions.size()==0)
 				continue;
 			int succession_index=arg_max<float>(scores, successions);
+
+			#PYTHOn
+			succession_index=successions[np.argmax(scores[successions])]
+            if self.is_succession_node(index, succession_index):
+                # NOTE: a box can have multiple successions(precursors) if multiple successions(precursors)
+                # have equal scores.
+                graph[index, succession_index]=True
 		}
 
 		#python
