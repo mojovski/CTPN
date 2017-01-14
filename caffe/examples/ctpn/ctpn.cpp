@@ -107,14 +107,21 @@ int main(int argc, char** argv) {
   string model_file   = argv[1];
   string trained_file = argv[2];
   string img_file    = argv[3];
-  cv::Vec3f mean(0,0,0);
+  cv::Vec3f mean(102.9801, 115.9465, 122.7717);
   CTPN ctpn(model_file, trained_file, mean);
   ctpn.options.score_threshold=0.01;
 
   std::cout << "---------- Text detection for "
             << img_file << " ----------" << std::endl;
 
-  cv::Mat img = cv::imread(img_file, -1);
+  cv::Mat img = cv::imread(img_file, CV_LOAD_IMAGE_COLOR);
+  std::cout << "Loaded image. (10,10): " << img.at<cv::Vec3b>(100,100) << std::endl;
+  //debug
+  //namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+  //cv::imshow("Display window", img);
+  //cv::waitKey(0);
+
+
   CHECK(!img.empty()) << "Unable to decode image " << img_file;
   ctpn.process(img);
 
