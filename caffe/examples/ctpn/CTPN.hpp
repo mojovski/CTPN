@@ -48,8 +48,8 @@ public:
 		  _net.reset(new Net<float>(model_file, TEST));
 		  _net->CopyTrainedLayersFrom(trained_file);
 
-		  std::cout << "_net->num_inputs(): " << _net->num_inputs() << std::endl;
-		  std::cout << "_net->num_outputs(): " << _net->num_outputs() << std::endl;
+		  //std::cout << "_net->num_inputs(): " << _net->num_inputs() << std::endl;
+		  //std::cout << "_net->num_outputs(): " << _net->num_outputs() << std::endl;
 
 		  //CHECK_EQ(_net->num_inputs(), 1) << "Network should have exactly one input.";
 		  //CHECK_EQ(_net->num_outputs(), 1) << "Network should have exactly one output.";
@@ -59,7 +59,7 @@ public:
 		  CHECK(_num_channels == 3)
 			<< "Input layer should have 3 channels.";
 		  _input_geometry = cv::Size(input_layer->width(), input_layer->height());
-		  std::cout << "The NET has input geometry of (wxh):" << _input_geometry << std::endl;
+		  //std::cout << "The NET has input geometry of (wxh):" << _input_geometry << std::endl;
 	}
 
 	void process(cv::Mat& img)
@@ -86,20 +86,20 @@ public:
 
 		//prepare the image
 		cv::Mat sample=preprocess(img);
-		std::cout << "sample: " << sample.at<cv::Vec3f>(100,100) << std::endl;
+		//std::cout << "sample: " << sample.at<cv::Vec3f>(100,100) << std::endl;
 		/* This operation will write the separate BGR planes directly to the
 		* input layer of the network because it is wrapped by the cv::Mat
 		* objects in input_channels. */
 		cv::split(sample, input_channels);
-		std::cout << "channel[0](100,100): " << input_channels[0].at<float>(100,100) << std::endl;
-		std::cout << "channel[1](100,100): " << input_channels[1].at<float>(100,100) << std::endl;
-		std::cout << "channel[2](100,100): " << input_channels[2].at<float>(100,100) << std::endl;
+		//std::cout << "channel[0](100,100): " << input_channels[0].at<float>(100,100) << std::endl;
+		//std::cout << "channel[1](100,100): " << input_channels[1].at<float>(100,100) << std::endl;
+		//std::cout << "channel[2](100,100): " << input_channels[2].at<float>(100,100) << std::endl;
 
 		CHECK(reinterpret_cast<float*>(input_channels.at(0).data)
 			== _net->input_blobs()[0]->cpu_data())
 			<< "Input channels are not wrapping the input layer of the network.";
-		std::cout << "*_net->input_blobs()[0]->cpu_data(): " << *(_net->input_blobs()[0]->cpu_data()+200000) << std::endl;
-		std::cout << "*input_channels.at(0).data: " << *((float*)input_channels.at(0).data+200000) << std::endl;
+		//std::cout << "*_net->input_blobs()[0]->cpu_data(): " << *(_net->input_blobs()[0]->cpu_data()+200000) << std::endl;
+		//std::cout << "*input_channels.at(0).data: " << *((float*)input_channels.at(0).data+200000) << std::endl;
 
 		//run the forward stuff
 		try{
@@ -107,8 +107,6 @@ public:
 		} catch (bp::error_already_set) {
 	      PyErr_Print();
 	    }
-
-		std::cout << "Net forwarded!" << std::endl << std::flush;
 
 		//check if there are any zero weights (indicating errors)
 		//const vector< shared_ptr< Blob< float > > > params=_net->params();
@@ -131,7 +129,7 @@ public:
 
 		std::vector<int> shape_rois=rois->shape();
 		std::vector<int> shape_scores=scores->shape();
-		//print shapes
+		/*//print shapes
 		std::cout << "shape_rois: [";
 		for (int i=0; i<shape_rois.size(); i++)
 		{
@@ -145,6 +143,7 @@ public:
 			std::cout << shape_scores[i] << ", ";
 		}
 		std::cout << "]\n";
+		*/
 
 
 		convertBlobToRectAndScores(rois, scores);
@@ -253,7 +252,7 @@ public:
 		int ndets=scores.size();
 
 		std::vector<size_t> order=sort_indexes<float>(scores);
-		std::cout << "argsort done! order.size: " << order.size() << "\n";
+		//std::cout << "argsort done! order.size: " << order.size() << "\n";
 		//a vector to keep track of suppressed elements
 		std::vector<int> suppressed(ndets,0);
 
@@ -298,7 +297,7 @@ public:
 	                suppressed[j] = 1;
 	        }
 	    }
-	    std::cout << "Return kept indices!\n";
+	    //std::cout << "Return kept indices!\n";
 	    return keep;
 	}
 
@@ -325,14 +324,14 @@ public:
 	cv::Mat preprocess(cv::Mat& img)
 	{
 		//1. subtract mean
-		std::cout << "Subtracting mean: " << this->_mean << std::endl;
+		//std::cout << "Subtracting mean: " << this->_mean << std::endl;
 		cv::Mat normalized_img=Utils::subtract_mean(img, this->_mean);
 		//std::cout << "normalized_img: " << normalized_img.at<cv::Vec3f>(100,100) << std::endl;
 
 		cv::Mat sample_resized;
 		if (normalized_img.size() != _input_geometry)
 		{
-		  	std::cout << "Resizing image to " << _input_geometry << std::endl;
+		  	//std::cout << "Resizing image to " << _input_geometry << std::endl;
 			cv::resize(normalized_img, sample_resized, _input_geometry);
 		}
 		  else
