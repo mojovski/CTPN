@@ -150,7 +150,7 @@ public:
 		convertBlobToRectAndScores(rois, scores);
 
 		std::vector<int> indices_to_keep=applyNMS(options.nms_threshold);
-		std::cout << "Indices to keep: " << indices_to_keep.size() << std::endl;
+		//std::cout << "Indices to keep: " << indices_to_keep.size() << std::endl;
 
 		filterRects(indices_to_keep);
 		//for (auto i: indices_to_keep)
@@ -275,7 +275,7 @@ public:
 	        if (suppressed[i] == 1)
 	            continue;
 	        keep.push_back(i);
-	        std::cout << "keep added: " << i << "\t";
+	        //std::cout << "keep added: " << i << "\t";
 	        ix1 = text_proposals[i].x;
 	        iy1 = text_proposals[i].y;
 	        ix2 = text_proposals[i].x+text_proposals[i].width;
