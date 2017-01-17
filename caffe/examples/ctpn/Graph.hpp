@@ -22,7 +22,7 @@ public:
 			{
 				int v=index;
 				sub_graphs.push_back(std::vector<int>(1,v));
-				while hasTrueValues(v,1)
+				while (hasTrueValues(v,1))
 				{
 					//v=np.where(self.graph[v, :])[0][0]
 					//selects the first element from the row v, which is true
@@ -31,8 +31,9 @@ public:
 					(*(sub_graphs.end()-1)).push_back(v);
 				}
 			}
-			return sub_graphs;
+			
 		}
+		return sub_graphs;
 
 		/*
 		for index in xrange(self.graph.shape[0]):
@@ -91,7 +92,7 @@ protected:
 		bool res=false;
 		if (dim==0)
 		{
-			for (int i=0; i<this->h; i++)
+			for (int i=0; i<this->height; i++)
 			{
 				res=this->data[i][index] || res;
 			}
@@ -99,7 +100,7 @@ protected:
 
 		if (dim==1)
 		{
-			for (int i=0; i<this->w; i++)
+			for (int i=0; i<this->width; i++)
 			{
 				res=this->data[index][i] || res;
 			}

@@ -161,7 +161,7 @@ public:
 		
 
 		std::cout << "Forward DNN processing done!\n";
-		scores=normalize_scores();
+		normalize_scores();
 
 		Connector connector;
 		text_lines=connector.getTextLines(this->text_proposals, this->scores, this->_input_geometry);
@@ -219,7 +219,7 @@ public:
 	{
 		std::cout << "Drawing results into image\n";
 		cv::Scalar color( 40, 255, 200 );
-		for(TextLines::iterator it=text_lines.begin(); it!=text_lines.end(); it++)
+		for(Connector::TextLines::iterator it=text_lines.begin(); it!=text_lines.end(); it++)
 		{
 			//std::cout << "rect: " << (*it) << std::endl;
 			cv::rectangle(img, (*it).rect, color);

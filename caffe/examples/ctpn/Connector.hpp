@@ -11,7 +11,7 @@ public:
 	struct TextLine{
 		cv::Rect rect;
 		float score;
-	}
+	};
 	typedef std::vector<TextLine> TextLines;
 
 	class Options
@@ -22,7 +22,7 @@ public:
 		float MIN_SIZE_SIM;
 		Options():MAX_HORIZONTAL_GAP(50),
 		MIN_V_OVERLAPS(0.7),
-		MIN_SIZE_SIM(0.7)();
+		MIN_SIZE_SIM(0.7){};
 
 	};
 
@@ -36,12 +36,14 @@ public:
 
 	Graph build_graph(std::vector<cv::Rect>& text_proposals, std::vector<float>& scores, cv::Size& im_size)
 	{
-		this->text_proposals=text_proposals
+		this->text_proposals=text_proposals;
         this->scores=scores;
-        this->im_size=im_size
+        this->im_size=im_size;
         this->heights=extract_heights(text_proposals);
 
+        std::cout << "Trying to allocate " << im_size.width << " boxes\n" << std::flush;
         boxes_table=std::vector<std::vector<int> >(im_size.width);
+        std::cout << "Done.\n" << std::flush;
         int idx=0;
         for (std::vector<cv::Rect>::iterator it=text_proposals.begin(); it!=text_proposals.end(); it++)
         {
@@ -49,24 +51,33 @@ public:
         	idx++;
         }
         //create a two dim array on heap
+        std::cout << "Creating graph data.\n" << std::flush;
         BoolMat graph = new bool*[text_proposals.size()];
 		for(int i = 0; i < text_proposals.size(); ++i)
 		{
 		    graph[i] = new bool[text_proposals.size()];
 		    std::fill_n(graph[i], text_proposals.size(), false); 
 		}
+		std::cout << "Done.\n" << std::flush;
 
 		int index=-1;
-		for (std::vector<cv::Rect>::iterator text_proposals.begin(); it!=text_proposals.end(); it++)
+		for (std::vector<cv::Rect>::iterator it=text_proposals.begin(); it!=text_proposals.end(); it++)
 		{
 			index++;
-			std::vector<int> successions=self.get_successions(index)
+			std::cout << "Getting successors....\n" << std::flush;
+			std::vector<int> successions=get_successions(index);
 			if (successions.size()==0)
+			{
+				std::cout << "Skipping...\n" << std::flush;
 				continue;
+			}
+			std::cout << "Calling arg max...\n" << std::flush;
 			int succession_index=successions[arg_max<float>(scores, successions)];
+			std::cout << "Calling is_succession_node.\n" << std::flush;
 			if (is_succession_node(index, succession_index))
 			{
-				graph[index, succession_index]=true;
+				std::cout << "Accessing graph[" << index << ","<<succession_index<<"]\n" << std::flush;
+				graph[index][succession_index]=true;
 			}
 		}
 		Graph g(graph, text_proposals.size(), text_proposals.size());
@@ -77,11 +88,16 @@ public:
 
 	TextLines getTextLines(std::vector<cv::Rect>& text_proposals, std::vector<float>& scores, cv::Size& im_size)
 	{
+		this->scores=scores;
+		this->text_proposals=text_proposals;
 		
-		Graph graph=connector.build_graph(text_proposals, scores, im_size);
+		std::cout << "Buiding graph...\n";
+		Graph graph=build_graph(text_proposals, scores, im_size);
+		std::cout << "Grouping elements...\n";
 		std::vector<std::vector<int> > groups=graph.sub_graphs_connected();
 
 		TextLines text_lines;
+		std::cout << "Fitting bounding boxes...\n";
 
 		for (std::vector<std::vector<int> >::iterator it=groups.begin(); it!=groups.end(); it++)
 		{
@@ -143,9 +159,9 @@ public:
 		solution: w=(A^T*A)^-1 * A^T *Y
 		*/
 		//build matrix A
-		cv::Mat A(x.size(),2, CV_64F); 
-		cv::Mat Y(y.size(), 1, CV_64F);
-		for (int i=0; i<x.size(); i++)
+		cv::Mat A(text_boxes.size(),2, CV_64F); 
+		cv::Mat Y(text_boxes.size(), 1, CV_64F);
+		for (int i=0; i<text_boxes.size(); i++)
 		{
 			A.at<double>(i,0)=text_boxes[i].x;
 			A.at<double>(i,1)=1.0;
@@ -207,10 +223,12 @@ public:
 
 protected:
 
-	bool is_succession_node(int idx, int succession_index)
+	bool is_succession_node(int index, int succession_index)
 	{
-		std::vector<int> precursors=get_precursors(succession_index)
-		if (this->scores[index]>=this->scores[arg_max<float>(this->scores, precursors)])
+		std::cout << "Calling get_precursors.\n" << std::flush;
+		std::vector<int> precursors=get_precursors(succession_index);
+		std::cout << "Done.\n" << std::flush;
+		if (this->scores[index] >= this->scores[arg_max<float>(this->scores, precursors)])
 		{
 			return true;
 		}
@@ -242,7 +260,7 @@ protected:
 		std::vector<float> heights;
 		for(std::vector<cv::Rect>::iterator it=text_proposals.begin(); it!=text_proposals.end(); it++)
 		{
-			heights.push_back(it->height+1.0)
+			heights.push_back(it->height+1.0);
 		}
 		return heights;
 	}
@@ -260,9 +278,9 @@ protected:
 			for(std::vector<int>::iterator it=adj_box_indices.begin(); it!=adj_box_indices.end(); it++)
 			{
 				if (this->meet_v_iou(*it, index))
-	                results.push_back(*it)
+	                results.push_back(*it);
 			}
-			if results.size()!=0:
+			if (results.size()!=0)
 				return results;
 
 		}
@@ -282,9 +300,9 @@ protected:
 			for(std::vector<int>::iterator it=adj_box_indices.begin(); it!=adj_box_indices.end(); it++)
 			{
 				if (this->meet_v_iou(*it, index))
-	                results.push_back(*it)
+	                results.push_back(*it);
 			}
-			if results.size()!=0:
+			if (results.size()!=0)
 				return results;
 
 		}
@@ -298,7 +316,7 @@ protected:
         float h2=this->heights[index2];
         float y0=std::max(this->text_proposals[index2].y, this->text_proposals[index1].y);
         float y1=std::max(this->text_proposals[index2].y+this->text_proposals[index2].height, this->text_proposals[index1].y+this->text_proposals[index1].height);
-        return std::max(0, y1-y0+1.0)/std::min(h1, h2);
+        return std::max(0.0, y1-y0+1.0)/std::min(h1, h2);
 	}
 
 	float size_similarity(int index1, int index2)
@@ -313,8 +331,9 @@ protected:
 	{
         return overlaps_v(index1, index2) >= options.MIN_V_OVERLAPS and size_similarity(index1, index2) >= options.MIN_SIZE_SIM;
 	}
+
             
-}
+};
 
 
 #endif
