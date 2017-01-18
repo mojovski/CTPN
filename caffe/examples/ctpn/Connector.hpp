@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 #include "Graph.hpp"
+#include <algorithm>
 
 class Connector
 {
@@ -71,9 +72,9 @@ public:
 				std::cout << "Skipping...\n" << std::flush;
 				continue;
 			}
-			std::cout << "Calling arg max...\n" << std::flush;
+			std::cout << "Calling arg max. scores(" << scores.size() << ", successions.size(): " << successions.size() << "...\n" << std::flush;
 			int succession_index=successions[arg_max<float>(scores, successions)];
-			std::cout << "Calling is_succession_node.\n" << std::flush;
+			std::cout << "result succession_index: " << succession_index <<".\n" << std::flush;
 			if (is_succession_node(index, succession_index))
 			{
 				std::cout << "Accessing graph[" << index << ","<<succession_index<<"]\n" << std::flush;
@@ -154,6 +155,7 @@ public:
 	**/
 	void fit_y(std::vector<cv::Rect>& text_boxes, float p1, float p2, float* y_p1, float* y_p2, bool top=true)
 	{
+		std::cout << "fit_y starts\n" << std::endl;
 		/*
 		model: y=mx+b=(x,1)(x,b)^T = Aw with A(x,1)
 		solution: w=(A^T*A)^-1 * A^T *Y
@@ -170,8 +172,12 @@ public:
 				Y.at<double>(i,0)=Y.at<double>(i,0)+text_boxes[i].height;
 
 		}
+		std::cout << "A.shape: " << A.size() << "\n" << std::flush;
+		std::cout << "Y.shape: " << Y.size() << "\n" << std::flush;
 		cv::Mat AtA=A.t()*A;
+		std::cout << "AtA.shape: " << AtA.size() << "\n" << std::flush;
 		cv::Mat AtAinv=AtA.inv();
+		std::cout << "AtAinv.shape: " << AtAinv.size() << "\n" << std::flush;
 		cv::Mat w=AtAinv*Y;
 		std::cout << "w: \n"<< w << std::endl;
 
@@ -179,6 +185,7 @@ public:
 		double bias=w.at<double>(1,0);
 		(*y_p1)=m*p1+bias;
 		(*y_p2)=m*p2+bias;
+		std::cout << "fit_y ends\n" << std::endl;
 	}
 
 	cv::Rect getBoundingBox(std::vector<cv::Rect>& elements)
@@ -225,10 +232,10 @@ protected:
 
 	bool is_succession_node(int index, int succession_index)
 	{
-		std::cout << "Calling get_precursors.\n" << std::flush;
+		std::cout << "Calling get_precursors with succession_index: " << succession_index<<".\n" << std::flush;
 		std::vector<int> precursors=get_precursors(succession_index);
 		std::cout << "Done.\n" << std::flush;
-		if (this->scores[index] >= this->scores[arg_max<float>(this->scores, precursors)])
+		if (this->scores[index] >= this->scores[*std::max_element(precursors.begin(), precursors.end())])
 		{
 			return true;
 		}
@@ -243,12 +250,14 @@ protected:
 	{
 		int idx_best=-1;
 		T max_val=0;
+		int counter=-1;
 		for (std::vector<int>::iterator iit=indices.begin(); iit!=indices.end(); iit++)
 		{
+			counter+=1;
 			if (max_val < arr[*iit])
 			{
 				max_val=arr[*iit];
-				idx_best=*iit;
+				idx_best=counter;
 			}
 		}
 		return idx_best;
@@ -267,11 +276,13 @@ protected:
 
 	std::vector<int> get_precursors(int index)
 	{
+		std::cout << "get_precursors start. index: " << index << ", text_proposals.size()=" << text_proposals.size() <<"\n" << std::flush;
 		cv::Rect box=this->text_proposals[index];
 	    std::vector<int> results;
 
 	    //for left in range((int)box.x+1, min(int(box[0])+cfg.MAX_HORIZONTAL_GAP+1, self.im_size[1])):
 	    int min_pixel=std::max((int)box.x - options.MAX_HORIZONTAL_GAP, 0)-1;
+	    std::cout << "min_pixel: " << min_pixel << "\n" << std::flush;
 		for (int left=(int)box.x-1; left > min_pixel; left--)
 		{
 			std::vector<int> adj_box_indices=this->boxes_table[left];
@@ -284,11 +295,13 @@ protected:
 				return results;
 
 		}
+		std::cout << "get_precursors returns\n" << std::flush;
 	    return results;
 	}
 
 	std::vector<int> get_successions(int index)
 	{
+		std::cout << "get_successions starts\n" << std::flush;
 		cv::Rect box=this->text_proposals[index];
 	    std::vector<int> results;
 
@@ -306,6 +319,7 @@ protected:
 				return results;
 
 		}
+		std::cout << "get_successions returns\n" << std::flush;
 	    return results;
 	}
 
