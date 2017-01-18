@@ -178,7 +178,7 @@ public:
 		std::cout << "AtA.shape: " << AtA.size() << "\n" << std::flush;
 		cv::Mat AtAinv=AtA.inv();
 		std::cout << "AtAinv.shape: " << AtAinv.size() << "\n" << std::flush;
-		cv::Mat w=AtAinv*Y;
+		cv::Mat w=AtAinv*A.t()*Y;
 		std::cout << "w: \n"<< w << std::endl;
 
 		double m=w.at<double>(0,0);
