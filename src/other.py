@@ -7,10 +7,10 @@ def prepare_img(im, mean):
     """
         transform img into caffe's input img.
     """
-    print "prepare_img: shape before process: "+str(im.shape)
+    #print "prepare_img: shape before transpose: "+str(im.shape)
     im_data=np.transpose(im-mean, (2, 0, 1))
-    print "prepare_img: shape after process: "+str(im_data.shape)
-    print "img[0,100,100]: " + str(im_data[0,100,100])
+    print "prepare_img: shape : "+str(im_data.shape)
+    #print "img[0,100,100]: " + str(im_data[0,100,100])
     return im_data
 
 
@@ -61,6 +61,7 @@ def resize_im(im, scale, max_scale=None):
     f=float(scale)/min(im.shape[0], im.shape[1])
     if max_scale!=None and f*max(im.shape[0], im.shape[1])>max_scale:
         f=float(max_scale)/max(im.shape[0], im.shape[1])
+    print "Resizeing Image: f="+str(f)+" for cv2.resize(im, (0, 0), fx=f, fy=f), f"
     return cv2.resize(im, (0, 0), fx=f, fy=f), f
 
 
@@ -92,10 +93,10 @@ class CaffeModel:
         return self.forward2({"data": input_data[np.newaxis, :]})
 
     def forward2(self, input_data):
-        print "forward2: input.data['data'].shape: "+str(input_data['data'].shape)
+        #print "forward2: input.data['data'].shape: "+str(input_data['data'].shape)
         for k, v in input_data.items():
-            print "key: "+str(k)+", v: "+str(*v)
-            print "v.shape: "+str(v.shape)
+            #print "key: "+str(k)+", v: "+str(*v)
+            #print "v.shape: "+str(v.shape)
             self.net.blobs[k].reshape(*v.shape)
             self.net.blobs[k].data[...]=v
         return self.net.forward()

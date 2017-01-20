@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
   string img_file    = argv[3];
   cv::Vec3f mean(102.9801, 115.9465, 122.7717);
   CTPN ctpn(model_file, trained_file, mean);
-  ctpn.options.score_threshold=0.5;
+  ctpn.options.score_threshold=0.7;
 
   std::cout << "---------- Text detection for "
             << img_file << " ----------" << std::endl;

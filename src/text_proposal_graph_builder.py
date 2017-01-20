@@ -10,6 +10,9 @@ class TextProposalGraphBuilder:
     def get_successions(self, index):
         box=self.text_proposals[index]
         results=[]
+        ##print "successions range:"
+        #print str(int(box[0])+1)+", min("+str(int(box[0])+cfg.MAX_HORIZONTAL_GAP+1)+", "+str(self.im_size[1])+")"
+
         for left in range(int(box[0])+1, min(int(box[0])+cfg.MAX_HORIZONTAL_GAP+1, self.im_size[1])):
             adj_box_indices=self.boxes_table[left]
             for adj_box_index in adj_box_indices:
@@ -50,8 +53,10 @@ class TextProposalGraphBuilder:
             h2=self.heights[index2]
             return min(h1, h2)/max(h1, h2)
 
-        return overlaps_v(index1, index2)>=cfg.MIN_V_OVERLAPS and \
+        res=overlaps_v(index1, index2)>=cfg.MIN_V_OVERLAPS and \
                size_similarity(index1, index2)>=cfg.MIN_SIZE_SIM
+        print "meet_v_iou("+str(index1)+", "+str(index2)+"): " +str(res)+", MIN_V_OVERLAPS: " +str(cfg.MIN_V_OVERLAPS)+", MIN_SIZE_SIM: "+str(cfg.MIN_SIZE_SIM)
+        return res
 
     def build_graph(self, text_proposals, scores, im_size):
         #im size: (height, width)
@@ -64,7 +69,7 @@ class TextProposalGraphBuilder:
         for index, box in enumerate(text_proposals):
             boxes_table[int(box[0])].append(index)
         self.boxes_table=boxes_table
-        print "Boxes_table: "+str(boxes_table)
+        #print "Boxes_table: "+str(boxes_table)
 
         graph=np.zeros((text_proposals.shape[0], text_proposals.shape[0]), np.bool)
 
@@ -72,6 +77,8 @@ class TextProposalGraphBuilder:
             successions=self.get_successions(index)
             if len(successions)==0:
                 continue
+            print "Successions " +str(index)
+            print successions
             succession_index=successions[np.argmax(scores[successions])]
             if self.is_succession_node(index, succession_index):
                 # NOTE: a box can have multiple successions(precursors) if multiple successions(precursors)

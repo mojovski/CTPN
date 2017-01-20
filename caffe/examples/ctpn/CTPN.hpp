@@ -62,7 +62,7 @@ public:
 		  CHECK(_num_channels == 3)
 			<< "Input layer should have 3 channels.";
 		  _input_geometry = cv::Size(input_layer->width(), input_layer->height());
-		  //std::cout << "The NET has input geometry of (wxh):" << _input_geometry << std::endl;
+		  std::cout << "The NET has input geometry of (wxh):" << _input_geometry << std::endl;
 	}
 
 	void process(cv::Mat& img)
@@ -150,14 +150,15 @@ public:
 
 
 		convertBlobToRectAndScores(rois, scores);
+		//before here: check. same results as in python.
 
-		std::vector<int> indices_to_keep=applyNMS(options.nms_threshold);
-		//std::cout << "Indices to keep: " << indices_to_keep.size() << std::endl;
-
+		std::vector<int> indices_to_keep=applyNMS(options.nms_threshold); //CHECK. 1:1 to the python version.
+		
 		filterRects(indices_to_keep);
-		//for (auto i: indices_to_keep)
-  		//	std::cout << i << ' ';
-
+		/*std::cout << "\nText proposals before connector:\n";
+		for (int i=0; i<10; i++)
+  			std::cout << "x: " << text_proposals[i].x << ' ';
+		*/
 		
 
 		std::cout << "Forward DNN processing done!\n";
@@ -166,22 +167,12 @@ public:
 		Connector connector;
 		text_lines=connector.getTextLines(this->text_proposals, this->scores, this->_input_geometry);
 
+		std::cout << "Connector returned text lines:\n";
+		for (int i=0; i<10; i++)
+		{
+			std::cout << "x: " << text_lines[i].rect.x;
+		}
 
-
-
-
-		//next apply NMS
-
-		//access the data:
-		//rois->data_at(n,c,h,w): float
-
-		
-		/* Copy the output layer to a std::vector */
-		/*Blob<float>* output_layer = _net->output_blobs()[0]; //how many blobs are there???
-		const float* begin = output_layer->cpu_data();
-		const float* end = begin + output_layer->channels();
-		return std::vector<float>(begin, end);
-		*/
 
 	}
 
@@ -202,17 +193,20 @@ public:
 
 	void filterRects(std::vector<int>& indices_to_keep)
 	{
-		std::vector<cv::Rect> _text_proposals;
-		std::vector<float> _scores;
+		std::vector<cv::Rect> _text_proposals_tmp;
+		std::vector<float> _scores_tmp;
+		Connector::TextLines _text_lines;
 
 		for (int i=0; i<indices_to_keep.size(); i++)
 		{
-			_text_proposals.push_back(this->text_proposals[indices_to_keep[i]]);
-			_scores.push_back(this->scores[indices_to_keep[i]]);
-		}
-		this->scores=_scores;
-		this->text_proposals=_text_proposals;
+			_text_proposals_tmp.push_back(this->text_proposals[indices_to_keep[i]]);
+			_scores_tmp.push_back(this->scores[indices_to_keep[i]]);
+			//DEBUG
+			//std::cout << "  (" << text_proposals[indices_to_keep[i]].x << ", " << text_proposals[indices_to_keep[i]].y << ")";
 
+		}
+		this->scores=_scores_tmp;
+		this->text_proposals=_text_proposals_tmp;
 	}
 
 	void drawResults(cv::Mat& img)
@@ -221,7 +215,7 @@ public:
 		cv::Scalar color( 40, 255, 200 );
 		for(Connector::TextLines::iterator it=text_lines.begin(); it!=text_lines.end(); it++)
 		{
-			//std::cout << "rect: " << (*it) << std::endl;
+			//std::cout << "rect.x: " << (*it).rect.x << std::endl;
 			cv::rectangle(img, (*it).rect, color);
 		}
 	}
@@ -233,15 +227,17 @@ public:
 	{
 		for (int i=0; i<rois_blob->shape()[0]; i++)
 		{
-			cv::Rect r(rois_blob->data_at(i,0,0,0), //x
-				rois_blob->data_at(i, 1,0,0), //y
+			cv::Rect r(rois_blob->data_at(i,0,0,0)+0.5 //x
+				rois_blob->data_at(i, 1,0,0)+0.5, //y
 				rois_blob->data_at(i, 2,0,0)-rois_blob->data_at(i, 0,0,0), //width
 				rois_blob->data_at(i, 3,0,0)-rois_blob->data_at(i, 1,0,0) //height
 				);
 			float score=scores_blob->data_at(i, 0,0,0);
+			//std::cout << "s: " << score << std::endl;
 			if (score<options.score_threshold)
 				continue;
 			//std::cout << "rect: " << (r) << std::endl;
+			
 			this->text_proposals.push_back(r);
 			this->scores.push_back(score);
 		}
@@ -260,7 +256,7 @@ public:
 	  iota(idx.begin(), idx.end(), 0);
 	  // sort indexes based on comparing values in v
 	  sort(idx.begin(), idx.end(),
-	       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+	       [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
 	  return idx;
 	}
 
@@ -278,6 +274,13 @@ public:
 		int ndets=scores.size();
 
 		std::vector<size_t> order=sort_indexes<float>(scores);
+		// std::cout << "Order before NMS:\n";
+		// for (int oi=0; oi<10; oi++)
+		// {
+		// 	std::cout << " " << order[oi];//<< ":" << scores[order[oi]];
+		// }
+		// std::cout << "\n";
+		
 		//std::cout << "argsort done! order.size: " << order.size() << "\n";
 		//a vector to keep track of suppressed elements
 		std::vector<int> suppressed(ndets,0);
@@ -300,13 +303,13 @@ public:
 	        if (suppressed[i] == 1)
 	            continue;
 	        keep.push_back(i);
-	        //std::cout << "keep added: " << i << "\t";
+	        //std::cout << "tokeep++: " << i << "\t";
 	        ix1 = text_proposals[i].x;
 	        iy1 = text_proposals[i].y;
 	        ix2 = text_proposals[i].x+text_proposals[i].width;
 	        iy2 = text_proposals[i].y+text_proposals[i].height;
-	        iarea = text_proposals[i].width*text_proposals[i].height;
-	        for (_j=(_i+1); _j<ndets;_j++)
+	        iarea = (text_proposals[i].width+1)*(text_proposals[i].height+1);
+	        for (_j=(_i+1); _j<ndets; _j++)
 	        {
 	            j = order[_j];
 	            if (suppressed[j] == 1)
@@ -318,7 +321,7 @@ public:
 	            w = std::max(0.0f, xx2 - xx1 + 1);
 	            h = std::max(0.0f, yy2 - yy1 + 1);
 	            inter = w * h;
-	            ovr = inter / (iarea + text_proposals[j].width*text_proposals[j].height - inter);
+	            ovr = inter / (iarea + (text_proposals[j].width+1)*(text_proposals[j].height+1) - inter);
 	            if (ovr >= min_threshold)
 	                suppressed[j] = 1;
 	        }

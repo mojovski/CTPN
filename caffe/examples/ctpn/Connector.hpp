@@ -46,13 +46,30 @@ public:
         boxes_table=std::vector<std::vector<int> >(im_size.width);
         std::cout << "Done.\n" << std::flush;
         int idx=0;
-        for (std::vector<cv::Rect>::iterator it=text_proposals.begin(); it!=text_proposals.end(); it++)
+        for (std::vector<cv::Rect>::iterator box=text_proposals.begin(); box!=text_proposals.end(); box++)
         {
-        	boxes_table[(int)(*it).x].push_back(idx);
+        	boxes_table[(int)(*box).x].push_back(idx);
         	idx++;
         }
+        //Print the boxes table: /CHECK!
+        /*std::cout << "BoxesTable: \n";
+        for (std::vector<std::vector<int> >::iterator box_line=boxes_table.begin(); box_line!=boxes_table.end(); box_line++)
+        {
+        	if (box_line->size()==0)
+        		continue;
+        	std::cout << "[";
+        	for (int ki=0; ki<box_line->size(); ki++)
+        	{
+        		std::cout << (*box_line)[ki] << " ";
+        	}
+        	std::cout <<"]\n";
+        }
+        */
+
+
+
         //create a two dim array on heap
-        std::cout << "Creating graph data.\n" << std::flush;
+        //std::cout << "Creating graph data.\n" << std::flush;
         BoolMat graph = new bool*[text_proposals.size()];
 		for(int i = 0; i < text_proposals.size(); ++i)
 		{
@@ -65,19 +82,26 @@ public:
 		for (std::vector<cv::Rect>::iterator it=text_proposals.begin(); it!=text_proposals.end(); it++)
 		{
 			index++;
-			std::cout << "Getting successors....\n" << std::flush;
-			std::vector<int> successions=get_successions(index);
+			//std::cout << "Getting successors....\n" << std::flush;
+			std::vector<int> successions=get_successions(index); //TODO: Something is different here!!
 			if (successions.size()==0)
 			{
 				std::cout << "Skipping...\n" << std::flush;
 				continue;
 			}
-			std::cout << "Calling arg max. scores(" << scores.size() << ", successions.size(): " << successions.size() << "...\n" << std::flush;
+			std::cout << "Successions " << index << "\n";
+			for (int si=0; si<successions.size(); si++)
+			{
+				std::cout << successions[si] << " ";
+			}
+			std::cout << "\n";
+
+			//std::cout << "Calling arg max. scores(" << scores.size() << ", successions.size(): " << successions.size() << "...\n" << std::flush;
 			int succession_index=successions[arg_max<float>(scores, successions)];
-			std::cout << "result succession_index: " << succession_index <<".\n" << std::flush;
+			//std::cout << "result succession_index: " << succession_index <<".\n" << std::flush;
 			if (is_succession_node(index, succession_index))
 			{
-				std::cout << "Accessing graph[" << index << ","<<succession_index<<"]\n" << std::flush;
+				//std::cout << "Accessing graph[" << index << ","<<succession_index<<"]\n" << std::flush;
 				graph[index][succession_index]=true;
 			}
 		}
@@ -155,7 +179,7 @@ public:
 	**/
 	void fit_y(std::vector<cv::Rect>& text_boxes, float p1, float p2, float* y_p1, float* y_p2, bool top=true)
 	{
-		std::cout << "fit_y starts\n" << std::endl;
+		//std::cout << "fit_y starts\n" << std::endl;
 		/*
 		model: y=mx+b=(x,1)(x,b)^T = Aw with A(x,1)
 		solution: w=(A^T*A)^-1 * A^T *Y
@@ -172,20 +196,20 @@ public:
 				Y.at<double>(i,0)=Y.at<double>(i,0)+text_boxes[i].height;
 
 		}
-		std::cout << "A.shape: " << A.size() << "\n" << std::flush;
-		std::cout << "Y.shape: " << Y.size() << "\n" << std::flush;
+		//std::cout << "A.shape: " << A.size() << "\n" << std::flush;
+		//std::cout << "Y.shape: " << Y.size() << "\n" << std::flush;
 		cv::Mat AtA=A.t()*A;
-		std::cout << "AtA.shape: " << AtA.size() << "\n" << std::flush;
+		//std::cout << "AtA.shape: " << AtA.size() << "\n" << std::flush;
 		cv::Mat AtAinv=AtA.inv();
-		std::cout << "AtAinv.shape: " << AtAinv.size() << "\n" << std::flush;
+		//std::cout << "AtAinv.shape: " << AtAinv.size() << "\n" << std::flush;
 		cv::Mat w=AtAinv*A.t()*Y;
-		std::cout << "w: \n"<< w << std::endl;
+		//std::cout << "w: \n"<< w << std::endl;
 
 		double m=w.at<double>(0,0);
 		double bias=w.at<double>(1,0);
 		(*y_p1)=m*p1+bias;
 		(*y_p2)=m*p2+bias;
-		std::cout << "fit_y ends\n" << std::endl;
+		//std::cout << "fit_y ends\n" << std::endl;
 	}
 
 	cv::Rect getBoundingBox(std::vector<cv::Rect>& elements)
@@ -232,9 +256,9 @@ protected:
 
 	bool is_succession_node(int index, int succession_index)
 	{
-		std::cout << "Calling get_precursors with succession_index: " << succession_index<<".\n" << std::flush;
+		//std::cout << "Calling get_precursors with succession_index: " << succession_index<<".\n" << std::flush;
 		std::vector<int> precursors=get_precursors(succession_index);
-		std::cout << "Done.\n" << std::flush;
+		//std::cout << "Done.\n" << std::flush;
 		if (this->scores[index] >= this->scores[*std::max_element(precursors.begin(), precursors.end())])
 		{
 			return true;
@@ -276,7 +300,7 @@ protected:
 
 	std::vector<int> get_precursors(int index)
 	{
-		std::cout << "get_precursors start. index: " << index << ", text_proposals.size()=" << text_proposals.size() <<"\n" << std::flush;
+		//std::cout << "get_precursors start. index: " << index << ", text_proposals.size()=" << text_proposals.size() <<"\n" << std::flush;
 		cv::Rect box=this->text_proposals[index];
 	    std::vector<int> results;
 
@@ -295,18 +319,19 @@ protected:
 				return results;
 
 		}
-		std::cout << "get_precursors returns\n" << std::flush;
+		//std::cout << "get_precursors returns\n" << std::flush;
 	    return results;
 	}
 
 	std::vector<int> get_successions(int index)
 	{
-		std::cout << "get_successions starts\n" << std::flush;
+		//std::cout << "get_successions starts\n" << std::flush;
 		cv::Rect box=this->text_proposals[index];
 	    std::vector<int> results;
 
 	    //for left in range((int)box.x+1, min(int(box[0])+cfg.MAX_HORIZONTAL_GAP+1, self.im_size[1])):
 	    int min_pixel=std::min((int)box.x+options.MAX_HORIZONTAL_GAP+1, this->im_size.width);
+	    //std::cout << "Succession range:\n" << ((int)box.x+1) << ", min(" << ((int)box.x+options.MAX_HORIZONTAL_GAP+1) << ", " << this->im_size.width<< ")\n";
 		for (int left=(int)box.x+1; left<min_pixel; left++)
 		{
 			std::vector<int> adj_box_indices=this->boxes_table[left];
@@ -319,7 +344,7 @@ protected:
 				return results;
 
 		}
-		std::cout << "get_successions returns\n" << std::flush;
+		//std::cout << "get_successions returns\n" << std::flush;
 	    return results;
 	}
 
@@ -343,7 +368,11 @@ protected:
 
 	bool meet_v_iou(int index1, int index2)
 	{
-        return overlaps_v(index1, index2) >= options.MIN_V_OVERLAPS and size_similarity(index1, index2) >= options.MIN_SIZE_SIM;
+		bool res=overlaps_v(index1, index2) >= options.MIN_V_OVERLAPS and size_similarity(index1, index2) >= options.MIN_SIZE_SIM;
+
+		std::cout << "meet_v_iou ( " << index1 << ", " << index2 << "): " << res << "(options.MIN_V_OVERLAPS: " << options.MIN_V_OVERLAPS << ", "<<
+			options.MIN_SIZE_SIM << ") " << std::endl;
+        return res;
 	}
 
             

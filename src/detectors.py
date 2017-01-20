@@ -37,23 +37,36 @@ class TextDetector:
         :return: the bounding boxes of the detected texts
         """
         text_proposals, scores=self.text_proposal_detector.detect(im, cfg.MEAN)
-        print "im.shape: "+str(im.shape)
-        print "Found scores of shape: "+str(scores.shape)
-        print "Text proposals returned by net: "
-        print str(text_proposals)
+        #print "im.shape: "+str(im.shape)
+        #print "Found scores of shape: "+str(scores.shape)
+        #print "Text proposals returned by net: "
+        #print str(text_proposals)
+        #print str(scores)
+
         keep_inds=np.where(scores>cfg.TEXT_PROPOSALS_MIN_SCORE)[0]
+        
+
         text_proposals, scores=text_proposals[keep_inds], scores[keep_inds]
 
         sorted_indices=np.argsort(scores.ravel())[::-1]
         text_proposals, scores=text_proposals[sorted_indices], scores[sorted_indices]
 
         # nms for text proposals
+        #print "NMS for text proposals. thr: "+str(cfg.TEXT_PROPOSALS_NMS_THRESH)
+        #print "scores: "+str(scores[0:10])
+        #print "sorted indices: "+str(sorted_indices[0:10])
         keep_inds=nms(np.hstack((text_proposals, scores)), cfg.TEXT_PROPOSALS_NMS_THRESH)
+        #print "Indices to keep after NMS("+str(len(keep_inds))+": "+str(keep_inds[0:10])
+
         text_proposals, scores=text_proposals[keep_inds], scores[keep_inds]
+        #print "text proposals before connector: x:\n"
+        #print str(text_proposals)
 
         scores=normalize(scores)
 
         text_lines=self.text_proposal_connector.get_text_lines(text_proposals, scores, im.shape[:2])
+        print "Connected text lines:"
+        print text_lines
 
         keep_inds=self.filter_boxes(text_lines)
         text_lines=text_lines[keep_inds]
