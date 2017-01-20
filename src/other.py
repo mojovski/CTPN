@@ -11,7 +11,7 @@ def prepare_img(im, mean):
     return im_data
 
 
-def draw_boxes(im, bboxes, is_display=True, color=None, caption="Image", wait=True):
+def draw_boxes(im, bboxes, is_display=True, color=None, caption="Image", wait=True, file_out="output.jpg"):
     """
         boxes: bounding boxes
     """
@@ -26,6 +26,7 @@ def draw_boxes(im, bboxes, is_display=True, color=None, caption="Image", wait=Tr
             c=color
         cv2.rectangle(im, tuple(box[:2]), tuple(box[2:4]), c)
     if is_display:
+        cv2.imwrite(file_out,im)
         cv2.imshow(caption, im)
         if wait:
             cv2.waitKey(0)

@@ -57,7 +57,7 @@ for im_name in demo_imnames:
     print "Number of the detected text lines: %s"%len(text_lines)
     print "Time: %f"%timer.toc()
 
-    im_with_text_lines=draw_boxes(im, text_lines, caption=im_name, wait=False)
+    im_with_text_lines=draw_boxes(im, text_lines, caption=im_name, wait=False, file_out="out_"+im_name)
 
 print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 print "Thank you for trying our demo. Press any key to exit..."
