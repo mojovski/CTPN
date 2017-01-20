@@ -52,7 +52,7 @@ public:
         	idx++;
         }
         //Print the boxes table: /CHECK!
-        /*std::cout << "BoxesTable: \n";
+        std::cout << "BoxesTable: \n";
         for (std::vector<std::vector<int> >::iterator box_line=boxes_table.begin(); box_line!=boxes_table.end(); box_line++)
         {
         	if (box_line->size()==0)
@@ -64,7 +64,7 @@ public:
         	}
         	std::cout <<"]\n";
         }
-        */
+        
 
 
 
