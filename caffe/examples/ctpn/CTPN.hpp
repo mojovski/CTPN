@@ -227,7 +227,7 @@ public:
 	{
 		for (int i=0; i<rois_blob->shape()[0]; i++)
 		{
-			cv::Rect r(rois_blob->data_at(i,0,0,0)+0.5 //x
+			cv::Rect r(rois_blob->data_at(i,0,0,0)+0.5, //x
 				rois_blob->data_at(i, 1,0,0)+0.5, //y
 				rois_blob->data_at(i, 2,0,0)-rois_blob->data_at(i, 0,0,0), //width
 				rois_blob->data_at(i, 3,0,0)-rois_blob->data_at(i, 1,0,0) //height
