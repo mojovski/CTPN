@@ -8,16 +8,16 @@ class TextProposalGraphBuilder:
         Build Text proposals into a graph.
     """
     def get_successions(self, index):
-            box=self.text_proposals[index]
-            results=[]
-            for left in range(int(box[0])+1, min(int(box[0])+cfg.MAX_HORIZONTAL_GAP+1, self.im_size[1])):
-                adj_box_indices=self.boxes_table[left]
-                for adj_box_index in adj_box_indices:
-                    if self.meet_v_iou(adj_box_index, index):
-                        results.append(adj_box_index)
-                if len(results)!=0:
-                    return results
-            return results
+        box=self.text_proposals[index]
+        results=[]
+        for left in range(int(box[0])+1, min(int(box[0])+cfg.MAX_HORIZONTAL_GAP+1, self.im_size[1])):
+            adj_box_indices=self.boxes_table[left]
+            for adj_box_index in adj_box_indices:
+                if self.meet_v_iou(adj_box_index, index):
+                    results.append(adj_box_index)
+            if len(results)!=0:
+                return results
+        return results
 
     def get_precursors(self, index):
         box=self.text_proposals[index]
@@ -54,6 +54,7 @@ class TextProposalGraphBuilder:
                size_similarity(index1, index2)>=cfg.MIN_SIZE_SIM
 
     def build_graph(self, text_proposals, scores, im_size):
+        #im size: (height, width)
         self.text_proposals=text_proposals
         self.scores=scores
         self.im_size=im_size
@@ -63,6 +64,7 @@ class TextProposalGraphBuilder:
         for index, box in enumerate(text_proposals):
             boxes_table[int(box[0])].append(index)
         self.boxes_table=boxes_table
+        print "Boxes_table: "+str(boxes_table)
 
         graph=np.zeros((text_proposals.shape[0], text_proposals.shape[0]), np.bool)
 

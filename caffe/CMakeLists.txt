@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.7)
 
 # ---[ Caffe project
 project(Caffe C CXX)
+set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
 
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
