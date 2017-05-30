@@ -19,6 +19,10 @@
 #
 
 from cfg import Config as cfg
+import sys
+sys.path.append("../src")
+sys.path.append("../caffe/python")
+
 from other import draw_boxes, resize_im, CaffeModel
 import cv2, os, caffe, sys
 from detectors import TextProposalDetector, TextDetector

@@ -1,3 +1,8 @@
+"""
+this is a copy of the file from CTPN/src/layers.
+Dont edit it here.
+It is used only from the c++ module (?)
+"""
 import numpy as np
 import sys
 import os

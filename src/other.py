@@ -18,16 +18,19 @@ def draw_boxes(im, bboxes, is_display=True, color=None, caption="Image", wait=Tr
     """
         boxes: bounding boxes
     """
+    thickness=3
     im=im.copy()
     for box in bboxes:
         if color==None:
             if len(box)==5 or len(box)==9:
                 c=tuple(cm.jet([box[-1]])[0, 2::-1]*255)
+                c=tuple(cm.brg([box[-1]])[0, 2::-1]*255)
+
             else:
                 c=tuple(np.random.randint(0, 256, 3))
         else:
             c=color
-        cv2.rectangle(im, tuple(box[:2]), tuple(box[2:4]), c)
+        cv2.rectangle(im, tuple(box[:2]), tuple(box[2:4]), c, thickness)
     if is_display:
         cv2.imwrite(file_out,im)
         cv2.imshow(caption, im)
